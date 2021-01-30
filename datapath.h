@@ -1,6 +1,3 @@
-//sa
-//as
-
 #ifndef DEATAPATH_H_INCLUDED
 #define DATAPATH_H_INCLUDED
 
@@ -209,14 +206,20 @@ public:
 
 	//TODO: implement all of these
 	void fetch(void); //may include PC as static?
+	
 	void decode(void);
-	void execute(void);
+	void hazard(void);
+	void control(void);
+	
+	void execute(void);//includes 
 	void memory(void);
 	void writeback(void);
 
 	void cycle(void){
 		fetch();
 		decode();
+		hazard();
+		control();
 		execute();
 		memory();
 		writeback();
