@@ -2,7 +2,7 @@
 #include "fetch.cpp"
 #include "decode.cpp"
 #include "execute.cpp"//should include forwarding
-#include "mem.cpp"
+#include "memory.cpp"
 #include "wb.cpp"
 
 #include "control.cpp"
