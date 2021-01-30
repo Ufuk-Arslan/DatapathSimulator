@@ -1,6 +1,9 @@
 //sa
 //as
 
+#ifndef DEATAPATH_H_INCLUDED
+#define DATAPATH_H_INCLUDED
+
 #include <iostream>
 #include <vector>
 using namespace std;
@@ -236,3 +239,5 @@ public:
 		cout<<"*******************************************"<<endl<<endl<<endl;
 	}
 };
+
+#endif
