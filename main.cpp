@@ -23,7 +23,7 @@ public:
 //HAZARD POLICY: IF, IN DECODE STAGE, HAZARD DETECTOR DETECTS AN HAZARD, DECODE UNIT  
 //PUSHES A ZERO INSTRUCTION TO THE REST OF THE PIPELINE UNTIL THE HAZARD IS RESOLVED
 
-class IFIDClass{//Classes may need ocnstructors to set the fields to zero to avoid unexpected behavior 
+class IFIDClass{//Classes may need constructors to set the fields to zero to avoid unexpected behavior 
 public:
 	long long instNo_i;	//number of instruction at this scate of pipeline for tallying and debug
 	long long instNo_o;
@@ -154,7 +154,33 @@ public:
 
 class MEMWBClass{
 public:
+	long long instNo_i;
+	long long instNo_o;
 
+	unsigned int result_i:32;
+	unsigned int result_o:32;
+
+	unsigned int destReg_i:5;
+	unsigned int destReg_o:5;
+
+	void clock(void){
+		instNo_o=instNo_i;
+		result_o=result_i;
+		destReg_o=destReg_i;
+	}
+
+	void display(void){
+		cout<<"-----EX/MEM Pipeline Register----"<<endl;
+		cout<<"---Input:--"<<endl;
+		cout<<"    #instruction index:"<<instNo_i<<endl;
+		cout<<"           result_i:"<<result_i<<endl;
+		cout<<"          destReg_i:"<<destReg_i<<endl;
+		cout<<"---Output:--"<<endl;
+		cout<<"    #instruction index:"<<instNo_o<<endl;
+		cout<<"           result_o:"<<result_o<<endl;
+		cout<<"          destReg_o:"<<destReg_o<<endl;
+		cout<<"--------------------------------"<<endl<<endl<<endl;
+	}
 };
 
 class InstructionMemoryClass;
