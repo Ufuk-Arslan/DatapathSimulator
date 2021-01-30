@@ -204,11 +204,11 @@ public:
 		if(reg!=0){
 			if(reg>31)
 				throw "Register index out of bounds!";
-			ins[reg]=data
+			ins[reg]=data;
 		}
 	}
 	uint32_t read(unsigned int reg){
-		return outs[reg]
+		return outs[reg];
 	}
 	void clock(){
 		for (int i=0;i<32;i++)
