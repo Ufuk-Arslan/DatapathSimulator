@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <vector>
+#include <cstdint>
+#include <map>
 using namespace std;
 
 
@@ -183,9 +185,39 @@ public:
 	}
 };
 
-class InstructionMemoryClass;
-class DataMemoryClass;
-class RegistersClass;
+
+class MemoryClass{
+public:
+	void write(uint32_t address, uint32_t data){
+		container[address]=data;
+	}
+	uint32_t read(uint32_t address){
+		return container[address];
+	}
+private:
+	map<uint32_t,uint32_t> container;
+};
+
+class RegistersClass{
+public:
+	void write(unsigned int reg, uint32_t data){
+		if(reg!=0){
+			if(reg>31)
+				throw "Register index out of bounds!";
+			ins[reg]=data
+		}
+	}
+	uint32_t read(unsigned int reg){
+		return outs[reg]
+	}
+	void clock(){
+		for (int i=0;i<32;i++)
+			outs[i]=ins[i];
+	} 
+private:
+	uint32_t ins[32]={0};
+	uint32_t outs[32]={0};
+};
 
 class Datapath{
 public:
@@ -196,12 +228,14 @@ public:
 	EXMEMClass EXMEM;
 	MEMWBClass MEMWB;
 
-	InstructionMemoryClass instructionMemory;//may be initialized in constructor using text input
-	DataMemoryClass dataMemory;
+	MemoryClass instructionMemory;//may be initialized in constructor using text input
+	MemoryClass dataMemory;
 	RegistersClass registers;
+	uint32_t PC;
 
 	Datapath(){
 		clockCount=0;
+		PC=0;
 	}
 
 	//TODO: implement all of these
@@ -227,6 +261,7 @@ public:
 		IDEX.clock();
 		EXMEM.clock();
 		MEMWB.clock();
+		registers.clock();
 		clockCount++;
 	}
 
@@ -234,7 +269,7 @@ public:
 		cout<<endl<<endl<<"*******************************************"<<endl;
 		cout<<"SITUATION AT CYCLE "<<clockCount<<endl;
 		cout<<"*******************************************"<<endl;
-		//print programCounter
+		cout<<"Program Counter: "<<PC<<endl;
 		IFID.display();
 		IDEX.display();
 		EXMEM.display();
