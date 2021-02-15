@@ -13,23 +13,24 @@
 [],#j type, implement as special case
 ]
 """
-btype = ["beq", "bne", "blt", "bge", "bltu", "bgeu"]
-ltype = ["lb", "lh", "lw", "lbu", "lhu"]
+branchType = ["beq", "bne", "blt", "bge", "bltu", "bgeu", "jal", "jalr"]
+loadType = ["lb", "lh", "lw", "lbu", "lhu"]
 wasLastInstBranch = True
-PC = 0
-
+instructionCounter = 0
+clockCounter = 0
 
 def main():
     return 0
 
-def addStall(instructions, numOfStalls):
-    # Let clock cycles pass
-    instructions[PC][5][0] += numOfStalls
-    # Add number of stalls
-    instructions[PC][5][1] += numOfStalls
+def addStall(instructions, numOfStalls, clockCounter):
+    # Increment clock cycle by number of stalls
+    clockCounter += numOfStalls + 1
+    instructions[instructionCounter][5][0] += clockCounter
+    # Add given number of stalls
+    instructions[instructionCounter][5][1] += numOfStalls
 
 
-def hazardDetection(instructions):
+def hazardDetector(instructions, clockCounter):
     # There are three types of hazards we may face when we are creating a pipelined structure.
 
     # 1- STRUCTURAL HAZARDS: They arise from resource conflicts when the hardware cannot support all possible
@@ -64,18 +65,24 @@ def hazardDetection(instructions):
     # If we have a branch type instruction we have two cases.
     # If this branch instruction is dependent to the destination register of previous instruction we add TWO STALLS,
     # otherwise we only add ONE STALL.
-    if instructions[PC][1] in btype:
-        if not wasLastInstBranch and (instructions[PC][3][0] == instructions[PC-1][2][0] or instructions[PC][4][0] == instructions[PC-1][2][0]):
-            addStall(instructions, 2)
+    if instructions[instructionCounter][1] in branchType:
+        if not wasLastInstBranch and (instructions[instructionCounter][3][0] == instructions[instructionCounter - 1][2][0] or instructions[instructionCounter][4][0] == instructions[instructionCounter - 1][2][0]):
+            addStall(instructions, 2, clockCounter)
         else:
-            addStall(instructions, 1)
+            addStall(instructions, 1, clockCounter)
 
     # HANDLING DATA HAZARDS
     # If we have a load type instruction, and also if next instruction needs to use the register that is supposed to
     # change in this load instruction we add ONE STALL.
-    if instructions[PC][1] in ltype:
-        if instructions[PC][2] == instructions[PC + 1][3][0] or instructions[PC][2] == instructions[PC + 1][4][0]:
-            addStall(instructions, 1)
+    elif instructions[instructionCounter][1] in loadType:
+        if instructions[instructionCounter][2] == instructions[instructionCounter + 1][3][0] or instructions[instructionCounter][2] == instructions[instructionCounter + 1][4][0]:
+            addStall(instructions, 1, clockCounter)
+
+    #  If there is no hazard we just add one cycle and continue with our instructions. The number of stalls will be 0.
+    else:
+        clockCounter += 1
+        instructions[instructionCounter][5][0] += clockCounter
+        instructions[instructionCounter][5][1] = 0
 
 
 if __name__ == '__main__':
