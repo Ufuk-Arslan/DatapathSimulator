@@ -13,7 +13,7 @@ In a terminal type `python main.py inputfile` to run the code for `inputfile`. T
 ### Dump Format
 In order to make analysis of the execution more explicit, in accordance with the main aim of this study, All the instructions emulated are tallied with relevant information such as the instruction, source and destination registers and their values, other arguments, program counter for that instruction, the clock cycle and the number of stalls for that instruction.
 
-## Hazard and Timing Considerations.
+## Hazard and Timing Considerations
 There are three types of hazards we may face when we are creating a pipelined structure. Remember we assume *no branch prediction* and data *forwarding*.
 
 ### Structural Hazards
