@@ -20,8 +20,10 @@ def hazardDetector(instructions):
 		# otherwise we only add ONE STALL.
 		if inst[1] in branchType:
 			if not instructions[instructionCounter - 1][1] in branchType and (
-					inst[3][0] == instructions[instructionCounter - 1][2][0] or
-					inst[4][0] == instructions[instructionCounter - 1][2][0]):
+                    	(inst[3][0] == instructions[instructionCounter - 1][2][0] and
+                     	inst[3][0] != 0 and inst[3][0] != -1) or
+                    	(inst[4][0] == instructions[instructionCounter - 1][2][0] and
+                     	inst[4][0] != 0 and inst[4][0] != -1)):
 				clockCounter += 3
 				inst[5] = (clockCounter, 2)
 			else:
