@@ -44,25 +44,31 @@ import emulator #the RISC-V emulator
 import hazard   #the module to calculate the timing of the instructions
 
 
-if(len(sys.argv)!=2): #check for the correct use of the application and print usage instructions if incorrect
+if(len(sys.argv)!=2): #check for the correct use of the application and print usage 
+		      #instructions if incorrect
 	print("usage:\"python[3] main.py <inputFileName>\"")
 	print("input file shoud have RISC-V instructions (without pseudoinstructions, labels and empty lines)")
 	sys.exit(-1)
 
-#create an emulator object with instructions in the file given as a command line argument
+#create an emulator object with instructions in the file given as a command 
+#line argument
 mymac = emulator.machine(sys.argv[1])
 try:
     mymac.run()
-except Exception as e: #if the run returns by throwing, then print bug warning but do the rest of the tallying so the user can trace the bug 
+except Exception as e: #if the run returns by throwing, then print bug warning but 
+		       #do the rest of the tallying so the user can trace the bug 
     print("!!!!!!!!!!BUG!!!!!!!!!!!") 
     print(e)
     print("I will dump stuff up to here anyway:")
 
-mymac.showprogram()		#first print the human-readable tokens fetched into the instruction memory of the machine
-mymac.showdata()		#then print the data memory of the machine on a byte basis
+mymac.showprogram()		#first print the human-readable tokens fetched into
+				#the instruction memory of the machine
+mymac.showdata()		#then print the data memory of the machine on a 
+				#byte basis
 mymac.showregs()		#then show the content of the 32 registers
 #mymac.showdump()		#then maybe show the emulator trace or...
-hazard.hazardDetector(mymac.dump)#call the timing simulator which writes timing data into the program trace dump and prints it beautifully
+hazard.hazardDetector(mymac.dump)#call the timing simulator which writes timing data 
+				#into the program trace dump and prints it beautifully
 
 #finally, calculate and print the necessary statistics about the execution
 print("\n\n**CLOCKS AND STALLS**")
@@ -80,22 +86,30 @@ import mem
 
 class machine:
     def __init__(self, filename):
-        self.instmem = dict()               #the instruction memory(holds instructions as tokenized input lines, indexed by the location in instruction memory)
-        self.datamem = mem.datamemory()     #the data memory, see mem module for implementation
-        self.reg = mem.regfile()            #the register file, see mem module for implementation
-        self.dump = list()                  #the dump list, which traces all the execution and is printed later
-        addr = int(0)                       #address to write the next instruction read from the input
+        self.instmem = dict()               #the instruction memory(holds instructions 
+					    #as tokenized input lines, indexed by the 
+					    #location in instruction memory)
+        self.datamem = mem.datamemory()     #the data memory, see mem module for 
+					    #implementation
+        self.reg = mem.regfile()            #the register file, see mem module for 
+					    #implementation
+        self.dump = list()                  #the dump list, which traces all the execution 
+					    #and is printed later
+        addr = int(0)                       #address to write the next instruction read 
+					    #from the input
         inp = open(filename, "r")           #the file with instructions written
         ##digest the input lines to instmem
         while (True):
             line = inp.readline()
             if not line:
                 break
-            text = str(line).replace(",", " ").replace("(", " ").replace(")", " ").rsplit()  # a simple tokenizer. example output: ["add","x5","x0","x1"]
+            text = str(line).replace(",", " ").replace("(", " ").replace(")", " ").rsplit() 
+	    # a simple tokenizer. example output: ["add","x5","x0","x1"]
             self.instmem[addr] = text
             addr += 4
         self.PC = 0                     #initialize PC for execution
-        self.counter = 0                #initialize instruction counter (number of instructions executed)
+        self.counter = 0                #initialize instruction counter 
+					#(number of instructions executed)
 
     def instruction(self, inputLine):  # the main function to process an instruction
         text = self.instmem[self.PC]  # read from instruction memory
@@ -108,25 +122,31 @@ class machine:
             arg1 = self.reg[s1]         #argument read from register
             s2 = self.regIdx(text[3])
             arg2 = self.reg[s2]
-            result = getattr(ops, "op" + op)(arg1, arg2)        #see ops file for logical implementation of most instructions
+            result = getattr(ops, "op" + op)(arg1, arg2)        #see ops file for logical implementation of 
+	    							#most instructions
             self.reg[d] = result
-            self.dump.append([(self.PC, self.counter), op, (d, result), (s1, arg1), (s2, arg2), (-1, -1)])#this is the format used for dump NOTE: executor does not write timing, hazard module will do that
+            self.dump.append([(self.PC, self.counter), op, (d, result), (s1, arg1), (s2, arg2), (-1, -1)])
+	    #this is the format used for dump NOTE: executor does not write timing, hazard module will do that
             self.PC += 4
         elif (any([op == i for i in ["addi", "xori", "ori", "andi", "slli", "srli", "srai", "slti", "sltui"]])):
                                             #Process arithmetic Itype Instructions
             d = self.regIdx(text[1])        #the same as Rtype section
             s1 = self.regIdx(text[2])
             arg1 = self.reg[s1]
-            s2 = -1                         #immediate arguments are traced as if from register -1
-            arg2 = int(text[3])             #immediate argument directly read from the instruction
-            immop = op[:len(op) - 1]        #get the logical operation name by removing i from op
+            s2 = -1                         #immediate arguments are traced as if 
+	    				    #from register -1
+            arg2 = int(text[3])             #immediate argument directly read from
+	    				    #the instruction
+            immop = op[:len(op) - 1]        #get the logical operation name by 
+	    				    #removing i from op
             result = getattr(ops, "op" + immop)(arg1, arg2)
             self.reg[d] = result
             self.dump.append([(self.PC, self.counter), op, (d, result), (s1, arg1), (s2, arg2), (-1, -1)])
             self.PC += 4
         elif (any([op == i for i in ["lb", "lh", "lw", "lbu", "lhu"]])):
                                             #Process load instructions
-            d = self.regIdx(text[1])        #source and destionation conventions are the same as before
+            d = self.regIdx(text[1])        #source and destionation conventions are 
+	    				    #the same as before
             s1 = self.regIdx(text[3])
             arg1 = self.reg[s1]
             s2 = -1
@@ -138,15 +158,18 @@ class machine:
             self.PC += 4
         elif (any([op == i for i in ["sb", "sh", "sw"]])):
                                                 #Process Store instructions
-            s1 = self.regIdx(text[1])           #same convention for sources but different for destination. See below.
+            s1 = self.regIdx(text[1])           #same convention for sources but different
+	    					#for destination. See below.
             s2 = self.regIdx(text[3])
             arg1 = self.reg[s1]
             arg2 = self.reg[s2]
             immptr = int(text[2])
             location = immptr + arg2
             result = getattr(ops, "op" + op)(self.datamem, location,
-                                             arg1)  # what will be read from memory later is returned here
-            self.dump.append([(self.PC, self.counter), op, (-1, immptr), (s1, arg1), (s2, arg2), (-1, -1)]) #for S-Type instructions, we trace the immediate argument as an immediate destination
+                                             arg1)  # what will be read from 
+					     	    #memory later is returned here
+            self.dump.append([(self.PC, self.counter), op, (-1, immptr), (s1, arg1), (s2, arg2), (-1, -1)]) 
+	    #for S-Type instructions, we trace the immediate argument as an immediate destination
             self.PC += 4
         elif (any([op == i for i in ["beq", "bne", "blt", "bge", "bltu", "bgeu"]])):
                                                 #Process branch instructions
@@ -156,17 +179,22 @@ class machine:
             arg2 = self.reg[s2]
             immptr = int(text[3])
             offset = getattr(ops, "op" + op)(arg1, arg2, immptr)
-            self.dump.append([(self.PC, self.counter), op, (-1, offset), (s1, arg1), (s2, arg2), (-1, -1)])#The result is traced as the ofset decided to branch as immediate
+            self.dump.append([(self.PC, self.counter), op, (-1, offset), (s1, arg1), (s2, arg2), (-1, -1)])
+	    #The result is traced as the ofset decided to branch as immediate
             self.PC += offset
         elif (op == "jal"): 
-                                                #Jump and link is implemented here instead of in ops module
+                                                #Jump and link is implemented here
+						#instead of in ops module
             d = self.regIdx(text[1])
             offset = int(text[2])
             self.reg[d] = self.PC + 4
-            self.dump.append([(self.PC, self.counter), op, (d, self.PC + 4), (0, 0), (-1, offset), (-1, -1)])#there is a single source, so we trace (0,0) for one of the sources
+            self.dump.append([(self.PC, self.counter), op, (d, self.PC + 4), (0, 0), (-1, offset), (-1, -1)])
+	    #there is a single source, so we trace (0,0) for one of the sources
             self.PC += offset                   #this is how jump happens
         elif (op == "jalr"):
-                                                #This instruction is also implemented here but fits our Rtype and Itype convention for source and destination tracing 
+                                                #This instruction is also implemented here but 
+						#fits our Rtype and Itype convention for source
+						#and destination tracing 
             d = self.regIdx(text[1])
             s1 = self.regIdx(text[3])
             arg1 = self.reg[s1]
@@ -181,7 +209,8 @@ class machine:
                                                 #Load upper immediate is implemented here
             d = self.regIdx(text[1])
             arg1 = int(text[2])
-            result = arg1 << 12                 #note that sign extension does not need special attention in this case
+            result = arg1 << 12                 #note that sign extension does not need 
+	    					#special attention in this case
             self.reg[d] = result;
             self.dump.append([(self.PC, self.counter), op, (d, result), (0, 0), (-1, arg1), (-1, -1)])
             self.PC += 4
@@ -194,22 +223,28 @@ class machine:
             self.dump.append([(self.PC, self.counter), op, (d, result), (0, 0), (-1, arg1), (-1, -1)])
             self.PC += 4
         elif (op == "ecall" or op == "ebreak"):
-                            #We do not have an operating system or system call convention, so they are equivalent of NOP
+                            #We do not have an operating system or system call convention,
+			    #so they are equivalent of NOP
             self.PC += 4
         else:               #if the op does not fit any in the RV32I instruction set
             raise Exception("Invalid instruction name")
 
-    def run(self):  #this function can be used to repeatedly run the machine until an exception occurs or the instruction is empty
+    def run(self):  #this function can be used to repeatedly run the machine until an 
+    	            #exception occurs or the instruction is empty
         while (True):
             try:
-                inst = self.instmem[self.PC]    #this throws if there is no instruction in that PC and therefore the run returns
+                inst = self.instmem[self.PC]    #this throws if there is no instruction 
+						#in that PC and therefore the run returns
             except:
                 return
-            if (len(inst) == 0):                #this is implemented as a design choice, we wanted it to stop executing if the line there was empty.
+            if (len(inst) == 0):                #this is implemented as a design choice, 
+	    					#we wanted it to stop executing if the line 
+						#there was empty.
                 return
             self.instruction(inst)              #this may also throw, and also the run will throw
 
-    def regIdx(self, text): #this function is to get the register index from possible aliases like sp that can be used in the source
+    def regIdx(self, text): #this function is to get the register index from possible aliases 
+    			    #like sp that can be used in the source
         if (text == "zero"):#these if statements denote basic aliases
             return 0
         elif (text == "ra"):
@@ -223,7 +258,8 @@ class machine:
         elif (text == "fp"):
             return 8
         elif (text[0] == "x"):#typical use case - register name starting with x
-            res = int(text[1:])#either returns the number following x or throws if the number is invalid
+            res = int(text[1:])#either returns the number following x or throws if the 
+	    		       #number is invalid
             if (res > 31 or res < 0):
                 raise Exception("invalid register index")
             return res
@@ -231,7 +267,8 @@ class machine:
             res = int(text[1:])
             if (res > 7 or res < 0):
                 raise Exception("invalid \"a\" register index")
-            return res + 10 #registers "an" start with x10 and continue up to x17, therefore its index should be raised by 10
+            return res + 10 #registers "an" start with x10 and continue up to x17, therefore 
+	    		    #its index should be raised by 10
         elif (text[0] == "s"):#the same logic as a-type naming
             res = int(text[1:])
             if (res > 11 or res < 0):
@@ -248,14 +285,16 @@ class machine:
                 return 5  #In RV32I, t-registers less than 3 are mapped to x5
             else:
                 return res + 25
-        else:   #if any of the formats above are not used where a register name was expected, throw an exception
+        else:   #if any of the formats above are not used where a register name 
+		#was expected, throw an exception
             raise Exception("Invalid register syntax")
             
     #functions from here are related to printing status about the emulator 
     def showdump(self):
         print("\n\n********DUMP********")
         for i in self.dump:
-            res = ""         #printing dump data which traces the whole execution with all ops,arguments and results
+            res = ""         #printing dump data which traces the whole 
+	    		     #execution with all ops,arguments and results
             for j in i:
                 res += "%10s" % (str(j))
             print(res)
@@ -264,12 +303,16 @@ class machine:
         print("\n\n****INSTRUCTIONS****")
         for i in sorted(self.instmem):
             res = "%6s:"%(str(i))
-            for j in self.instmem[i]:       #prints the instruction memory tokens in human-readable format. Is a clean version of the input code
+            for j in self.instmem[i]:       #prints the instruction memory 
+	    				    #tokens in human-readable format.
+					    #Is a clean version of the input code
                 res += "%6s" % (str(j))
             print(res)
 
     def showdata(self):
-        print("\n\n********DATA********")   #prints the data memory byte-by-byte, only those locations that were written on. Both hex and decimal
+        print("\n\n********DATA********")   #prints the data memory byte-by-byte, only 
+					    #those locations that were written on. Both hex 
+					    #and decimal
         for i in sorted(self.datamem.storage):
             print("%6s:    %s"%(str(i),str(self.datamem.storage[i])))
 
@@ -288,9 +331,12 @@ import ctypes	#to be used for getting last 8 bits of some data in an unsigned ma
 
 class regfile: #the register file class to be used in the emulator
 	def __init__(self):
-		self.storage=[0 for i in range(32)]	#the data is stored as python integers in a list
-	def __getitem__(self,key):			#python [] indexing is enabled for convenience 
-		if(key==0):				#registers are indexed with numbers and index 0 always returns a 0
+		self.storage=[0 for i in range(32)]	#the data is stored as python 
+							#integers in a list
+	def __getitem__(self,key):			#python [] indexing is enabled for 
+							#convenience 
+		if(key==0):				#registers are indexed with numbers 
+							#and index 0 always returns a 0
 			return 0
 		else:
 			return self.storage[key]	#simply return data from the array
@@ -303,9 +349,11 @@ class regfile: #the register file class to be used in the emulator
 
 class datamemory: #the class for data memory to be used in the emulator
 	def __init__(self):
-		self.storage=dict()	#all the data is held in a dictionary to avoid gigabytes-sized memory usage
+		self.storage=dict()	#all the data is held in a dictionary to avoid 
+					#gigabytes-sized memory usage
 
-	def get(self,index):		#all read-write is done in bytes in this module. see other functions for larger ones #DOES NOT SIGN EXTEND
+	def get(self,index):		#all read-write is done in bytes in this module.
+					#see other functions for larger ones #DOES NOT SIGN EXTEND
 		try:
 			return self.storage[index]
 		except:			#if nothing was written in that part of the memory, then return 0
@@ -315,15 +363,18 @@ class datamemory: #the class for data memory to be used in the emulator
 			raise Exception("Misaligned memory read address for word!")
 			return
 		else: #little endian
-			return self.get(index)+(self.get(index+1)<<8)+(self.get(index+2)<<16)+(self.get(index+3)<<24) #combine the bytes in the memory
+			return self.get(index)+(self.get(index+1)<<8)+(self.get(index+2)<<16)+(self.get(index+3)<<24) 
+			#combine the bytes in the memory
 	def gethalf(self,index):	#the same as getword for 2-byte half words #DOES NOT SIGN EXTEND
 		if(index%2!=0):
 			raise Exception("Misaligned memory read address for half!")
 			return
 		else: #little endian
 			return self.get(index)+(self.get(index+1)<<8)
-	def write(self,index,data):				#writing a single byte into the memory. Again this is the only way to access the container
-		self.storage[index]=ctypes.c_uint8(data).value	#this is done to get rid of the sign and get the least significant 8 bits
+	def write(self,index,data):				#writing a single byte into the memory.
+								#Again this is the only way to access the container
+		self.storage[index]=ctypes.c_uint8(data).value	#this is done to get rid of the sign and 
+								#get the least significant 8 bits
 	def writehalf(self,index,data):
 		if(index%2!=0):					#see getword for the explanation
 			raise Exception("Misaligned memory write address for half!")
@@ -336,7 +387,8 @@ class datamemory: #the class for data memory to be used in the emulator
 			raise Exception("Misaligned memory write address for word!")
 			return
 		else: #little endian
-			self.write(index,data)		#write all the byte components in their corresponding addresses
+			self.write(index,data)		#write all the byte components in their 
+							#corresponding addresses
 			self.write(index+1,data>>8)
 			self.write(index+2,data>>16)
 			self.write(index+3,data>>24)
@@ -348,9 +400,12 @@ This module provides a clean list of how the individual instructions are logical
 ```pyhton
 import ctypes as t #used to make sign-extensions correctly
 
-#These operations are used for R-type instructions and arithmetic Itype instructions corresponding to them
-#they are to be used in the emulator to implement logic, notably for correct sign-extension
-#notice that all of these return unsigned 32-bit values to make further operations on these numbers bugless
+#These operations are used for R-type instructions and arithmetic Itype 
+#instructions corresponding to them
+#they are to be used in the emulator to implement logic, notably for 
+#correct sign-extension
+#notice that all of these return unsigned 32-bit values to make further 
+#operations on these numbers bugless
 def opadd(a,b): #for add and addi
 	return t.c_uint32(a+b).value
 def opsub(a,b): #for sub and subi
@@ -367,7 +422,8 @@ def opsrl(a,b): #for srl and srli
 	return t.c_uint32(t.c_uint32(a).value>>b).value
 def opsra(a,b): #for sra and srai
 	return t.c_uint32(a>>b).value
-def opslt(a,b): #for slt and slti -- notice the sign difference between this and sltu logic 
+def opslt(a,b): #for slt and slti -- notice the sign difference
+#between this and sltu logic 
 	return t.c_uint32(t.c_int32(a).value<t.c_int32(b).value).value
 def opsltu(a,b): #for sltu and sltui
 	return t.c_uint32(t.c_uint32(a).value<t.c_uint32(b).value).value
@@ -375,7 +431,8 @@ def opsltu(a,b): #for sltu and sltui
 
 
 #these operations only implement sign extension for data got from the memory
-#the data memory object is also to be passed as an argument to implement sizing here, not in emulator module 
+#the data memory object is also to be passed as an argument to implement
+#sizing here, not in emulator module 
 def oplb(mem,idx):#for lb
 	return t.c_int8(mem.get(idx)).value
 def oplbu(mem,idx):#for lbu
@@ -390,7 +447,8 @@ def oplw(mem,idx):#for lw
 #the same for store instructions here
 def opsb(mem,idx,data):#for sb
 	mem.write(idx,data)
-	return oplb(mem,idx) #this is returned to be able to maybe spot bugs, instead of returning nothing
+	return oplb(mem,idx) #this is returned to be able to maybe
+	#spot bugs, instead of returning nothing
 def opsh(mem,idx,data):#for sh
 	mem.writehalf(idx,data)
 	return oplh(mem,idx)
@@ -399,12 +457,14 @@ def opsw(mem,idx,data):#for sw
 	return oplw(mem,idx)
 
 
-#implementations for branch operations, these calculate the offset to branch (what to add to PC)
+#implementations for branch operations, these calculate the offset 
+#to branch (what to add to PC)
 #using the condition on the arguments  
 def opbeq(a,b,immoffset):#for branch if equal
 	if(a==b):
 		return immoffset
-	else:		#just go to the next instruction if the condition does not hold
+	else:		#just go to the next instruction if the
+			#condition does not hold
 		return 4
 def opbne(a,b,immoffset):
 	if(a!=b):#for branch if not equal
@@ -412,7 +472,8 @@ def opbne(a,b,immoffset):
 	else:
 		return 4
 def opblt(a,b,immoffset):#for branch if less than
-	if(t.c_int32(a).value < t.c_int32(b).value):#we care about meaning of the sign bit while comparing
+	if(t.c_int32(a).value < t.c_int32(b).value):#we care about meaning
+						    #of the sign bit while comparing
 		return immoffset
 	else:
 		return 4
@@ -422,7 +483,8 @@ def opbge(a,b,immoffset):#for branch if greater than or equal to
 	else:
 		return 4
 def opbltu(a,b,immoffset):#for branch if less than (unsigned)
-	if(t.c_uint32(a).value < t.c_uint32(b).value):#notice we make unsigned comparison from now on 
+	if(t.c_uint32(a).value < t.c_uint32(b).value):#notice we make unsigned 
+						      #comparison from now on 
 		return immoffset
 	else:
 		return 4
@@ -457,7 +519,8 @@ def hazardDetector(instructions):
 	for inst in instructions:
 		# HANDLING CONTROL HAZARDS
 		# If we have a branch type instruction we have two cases.
-		# If this branch instruction is dependent to the destination register of previous instruction we add TWO STALLS,
+		# If this branch instruction is dependent to the destination register 
+		#of previous instruction we add TWO STALLS,
 		# otherwise we only add ONE STALL.
 		if inst[1] in branchType:
 			if not instructions[instructionCounter - 1][1] in branchType and (
@@ -472,7 +535,8 @@ def hazardDetector(instructions):
 				inst[5] = (clockCounter, 1)
 
 		# HANDLING DATA HAZARDS
-		# If we have a load type instruction, and also if next instruction needs to use the register that is supposed to
+		# If we have a load type instruction, and also if next instruction 
+		#needs to use the register that is supposed to
 		# change in this load instruction we add ONE STALL.
 		elif inst[1] in loadType:
 			if inst[2][0] == instructions[instructionCounter + 1][3][0] or \
@@ -482,7 +546,8 @@ def hazardDetector(instructions):
 			else:
 				clockCounter += 1
 				inst[5] = (clockCounter, 0)
-		#  If there is no hazard we just add one cycle and continue with our instructions. The number of stalls will be 0.
+		#  If there is no hazard we just add one cycle and continue with our 
+		#instructions. The number of stalls will be 0.
 		else:
 			clockCounter += 1
 			inst[5] = (clockCounter, 0)
@@ -494,3 +559,18 @@ def hazardDetector(instructions):
 	return 0
 
 ```
+
+# Test Cases
+These are some of the test cases that we used to test our program.
+
+1-
+
+2-
+
+3-
+
+4-
+
+5-
+
+6-
