@@ -1,0 +1,7 @@
+lw x1, 0(x0)
+lw x2, 8(x0)
+lw x4, 16(x0)
+add x3, x1, x2
+sw x3, 24(x0)
+add x5, x1, x4
+sw x5, 32(x0)
