@@ -36,7 +36,9 @@ def hazardDetector(instructions):
 					inst[2][0] == instructions[instructionCounter + 1][4][0]:
 				clockCounter += 2
 				inst[5] = (clockCounter, 1)
-
+			else:
+				clockCounter += 1
+				inst[5] = (clockCounter, 0)
 		#  If there is no hazard we just add one cycle and continue with our instructions. The number of stalls will be 0.
 		else:
 			clockCounter += 1
