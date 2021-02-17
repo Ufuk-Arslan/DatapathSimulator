@@ -7,12 +7,13 @@ def hazardDetector(instructions):
 	# Initializing counter variables
 	clockCounter = 4
 	instructionCounter = 0
-
+	
 	print("\n\n*******EXECUTION******")
 	print("arguments and results are as (register,value) with register being -1 for not a register")
 	print("\n%10s%10s%10s%10s%10s%10s"%("PC&order","inst.","result","arg1","arg2","clk&stall"))
 	print("-"*60)
-	#  Following executed iterations one by one
+	
+	# After we get the dump, we can iterate through instructions one by one.
 	for inst in instructions:
 		# HANDLING CONTROL HAZARDS
 		# If we have a branch type instruction we have two cases.
